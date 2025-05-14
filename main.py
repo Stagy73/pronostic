@@ -1,3 +1,5 @@
+print("📂 Chargement turfoo_data.json...")
+
 
 import os
 import json

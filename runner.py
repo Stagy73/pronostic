@@ -22,3 +22,5 @@ if __name__ == "__main__":
 
     run_script("turfoo_scraper.py")
     run_script("main.py")
+    print("📄 Fichier JSON existe :", os.path.exists("turfoo_data.json"))
+
