@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 
-def scrape_turfoo_trot():
+def scrape_turfoo_selected_courses():
     url = "https://www.turfoo.fr/programmes-courses/"
     print(f"🌐 Chargement de la page {url}")
     response = requests.get(url)
@@ -14,7 +14,7 @@ def scrape_turfoo_trot():
     soup = BeautifulSoup(response.text, "html.parser")
     results = []
 
-    blocs = soup.select("div.bloc-principal > div.bloc-course")  # structure 2025
+    blocs = soup.select("div.bloc-principal > div.bloc-course")
     print(f"🔍 {len(blocs)} blocs de course trouvés")
 
     for bloc in blocs:
@@ -23,8 +23,9 @@ def scrape_turfoo_trot():
             rows = bloc.select("table tr.course")
 
             for row in rows:
-                type_text = row.find_all("td")[0].get_text(strip=True).lower()
-                if "attelé" in type_text or "monté" in type_text:
+                cells = row.find_all("td")
+                type_text = cells[0].get_text(strip=True).lower()
+                if any(t in type_text for t in ["attelé", "monté", "haies", "steeple"]):
                     heure = row.find("td", class_="heure").text.strip()
                     lien = row.find("a")
                     nom_course = lien.text.strip()
@@ -58,7 +59,7 @@ def scrape_turfoo_trot():
                         "hippodrome": hippodrome,
                         "nom_course": nom_course,
                         "heure": heure,
-                        "type": "trot attelé" if "attelé" in type_text else "trot monté",
+                        "discipline": type_text,
                         "url": link,
                         "chevaux": chevaux
                     })
@@ -66,9 +67,9 @@ def scrape_turfoo_trot():
             print(f"❌ Erreur lecture bloc : {e}")
             continue
 
-    print(f"💾 {len(results)} course(s) de trot sauvegardée(s)")
+    print(f"💾 {len(results)} course(s) de trot/monté/haies sauvegardée(s)")
     with open("turfoo_data.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
-    scrape_turfoo_trot()
+    scrape_turfoo_selected_courses()
