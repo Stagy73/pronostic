@@ -1,6 +1,3 @@
-print("📂 Chargement turfoo_data.json...")
-
-
 import os
 import json
 from datetime import datetime
@@ -8,28 +5,39 @@ from openai import OpenAI
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+print("📂 Chargement turfoo_data.json...")
 
-# Google Sheets auth
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-gs_client = gspread.authorize(creds)
-sheet = gs_client.open("Pronostics_Trot_Monte").sheet1
-print("📎 Google Sheet trouvé et ouvert")
-
-
-# Chargement des données Turfoo
+# Vérification du fichier JSON
 try:
     with open("turfoo_data.json", "r", encoding="utf-8") as f:
-        courses = json.load(f)
+        content = f.read()
+        if not content.strip():
+            raise ValueError("❌ turfoo_data.json est vide.")
+        courses = json.loads(content)
+        print(f"✅ {len(courses)} course(s) chargée(s)")
 except Exception as e:
-    raise RuntimeError(f"Erreur de lecture de turfoo_data.json : {e}")
+    print(f"❌ Erreur chargement JSON : {e}")
+    exit(1)
+
+# Authentification OpenAI
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Authentification Google Sheets
+print("🔐 Connexion à Google Sheets...")
+try:
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    gs_client = gspread.authorize(creds)
+    sheet = gs_client.open("Pronostics_Trot_Monte").sheet1
+    print("📎 Google Sheet trouvé et ouvert")
+except Exception as e:
+    print(f"❌ Erreur Google Sheets : {e}")
+    exit(1)
 
 # Date du jour
 today = datetime.now().strftime("%Y-%m-%d")
 
-# Traitement de chaque course
+# Traitement des courses
 for course in courses:
     try:
         hippodrome = course["hippodrome"]
@@ -38,7 +46,6 @@ for course in courses:
         type_course = course["type"]
         chevaux = course["chevaux"]
 
-        # Construction du prompt
         prompt_chevaux = "\n".join([
             f"{c['numero']}. {c['nom']} (jockey: {c['jockey']}, cote: {c['cote']})"
             for c in chevaux
@@ -55,7 +62,8 @@ for course in courses:
             "Sois affirmatif. Format :\nBases : ...\nOutsiders : ...\nSélection : ..."
         )
 
-        # Appel OpenAI
+        print(f"🤖 Génération du pronostic pour {nom_course} ({heure})")
+
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -64,12 +72,14 @@ for course in courses:
             ]
         )
         pronostic = response.choices[0].message.content
+        print(f"✅ Pronostic obtenu pour {nom_course}")
 
-        # Envoi dans Google Sheets
+        # Insertion dans Google Sheet
         sheet.append_row([
             today, heure, nom_course, hippodrome, type_course, "", len(chevaux),
             "", "", "", "", pronostic, "", "via Turfoo+GPT"
         ])
+        print(f"📤 Ligne ajoutée dans Google Sheets pour {nom_course}")
 
     except Exception as e:
         print(f"❌ Erreur sur la course {course.get('nom_course', '?')} : {e}")
