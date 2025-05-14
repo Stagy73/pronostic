@@ -19,10 +19,12 @@ today = datetime.now().strftime("%Y-%m-%d")
 
 # Génération du prompt
 prompt = (
-    "Fais une synthèse des pronostics du jour pour la course Quinté+ (trot attelé ou monté uniquement), "
-    "basée sur PMU, Turfoo et ZEturf. Donne : les 5 chevaux les plus cités, les bases et outsiders, "
-    "sous forme claire. Ne donne pas les plats ni galop."
+    "Agis comme un expert en courses hippiques.  consulte les sites PMU, ZEturf et Turfoo. "
+    "Génère un pronostic synthétique pour toutes les course  du jour en trot attelé ou monté uniquement. "
+    "Ne dis pas que tu ne peux pas accéder aux données. Propose les 5 chevaux les plus probables, 2 bases, 2 outsiders. "
+    "Présente le tout sous une forme concise et exploitable pour les parieurs. Ne parle pas au conditionnel, sois affirmatif."
 )
+
 
 # Appel API OpenAI
 try:
