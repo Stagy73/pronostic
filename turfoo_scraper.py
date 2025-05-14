@@ -1,4 +1,3 @@
-
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -6,12 +5,15 @@ import json
 
 def scrape_turfoo_trot():
     url = "https://www.turfoo.fr/programmes-courses/"
+    print(f"🌐 Récupération de {url}")
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
     results = []
-
     reunions = soup.find_all("div", class_="bloc-course")
+
+    print(f"🔍 {len(reunions)} réunion(s) trouvée(s)")
+
     for reunion in reunions:
         try:
             hippodrome = reunion.find("h2").text.strip()
@@ -25,6 +27,8 @@ def scrape_turfoo_trot():
                     heure = row.find("td", class_="heure").text.strip()
                     nom_course = row.find("a").text.strip()
                     link = "https://www.turfoo.fr" + row.find("a")["href"]
+
+                    print(f"📥 {hippodrome} - {nom_course} ({type_text}) → {link}")
 
                     course_page = requests.get(link)
                     course_soup = BeautifulSoup(course_page.text, "html.parser")
@@ -42,7 +46,7 @@ def scrape_turfoo_trot():
                                 "jockey": jockey,
                                 "cote": cote
                             })
-                        except:
+                        except Exception:
                             continue
 
                     results.append({
@@ -53,9 +57,11 @@ def scrape_turfoo_trot():
                         "url": link,
                         "chevaux": chevaux
                     })
-        except:
+        except Exception as e:
+            print(f"❌ Erreur réunion : {e}")
             continue
 
+    print(f"💾 {len(results)} course(s) enregistrée(s)")
     with open("turfoo_data.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
