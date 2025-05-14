@@ -16,6 +16,8 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open("Pronostics_Trot_Monte").sheet1
+print("📎 Google Sheet trouvé et ouvert")
+
 
 # Chargement des données Turfoo
 try:
