@@ -1,18 +1,18 @@
 
 import os
-import openai
+from openai import OpenAI
 import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Authentification OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Authentification OpenAI (v1.0+)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Authentification Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-client = gspread.authorize(creds)
-sheet = client.open("Pronostics_Trot_Monte").sheet1
+gs_client = gspread.authorize(creds)
+sheet = gs_client.open("Pronostics_Trot_Monte").sheet1
 
 # Date du jour
 today = datetime.now().strftime("%Y-%m-%d")
@@ -26,14 +26,14 @@ prompt = (
 
 # Appel API OpenAI
 try:
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "Tu es un expert en courses hippiques."},
             {"role": "user", "content": prompt}
         ]
     )
-    pronostic = response['choices'][0]['message']['content']
+    pronostic = response.choices[0].message.content
 except Exception as e:
     pronostic = f"❌ Erreur OpenAI : {str(e)}"
 
