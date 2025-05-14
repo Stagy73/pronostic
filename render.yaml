@@ -1,0 +1,8 @@
+
+services:
+  - type: cron
+    name: pronostics-quinte
+    runtime: python
+    schedule: "0 10 * * *"  # Tous les jours à 10h00 UTC
+    buildCommand: ""
+    startCommand: "python main.py"
